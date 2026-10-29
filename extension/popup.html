@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VEIL · HwyNe</title><link rel="stylesheet" href="style.css"></head>
+<body class="popup"><main>
+  <header><a class="brand" href="setup.html" target="_blank"><img src="icons/logo.svg" width="36" height="40" alt=""><span>VEIL<small>by HwyNe</small></span></a><a class="icon-button" href="setup.html" target="_blank" title="Ayarlar ve kurulum" aria-label="Ayarlar ve kurulum">⚙</a></header>
+  <div class="eyebrow">DAHA SAKİN BİR İNTERNET</div>
+  <section class="feature"><div class="feature-icon">✦</div><div class="feature-copy"><strong>Reklam kalkanı</strong><small id="adStatus">Durum doğrulanıyor…</small></div><button id="adToggle" class="ad-toggle" role="switch" aria-checked="false" aria-label="Reklam engellemeyi aç veya kapat" disabled>Bekle…</button></section>
+  <button id="adTest" class="text-button ad-test">Reklam kuralını test et</button>
+  <div id="adTestResult" class="notice" role="status" hidden></div>
+  <div id="filterError" class="notice error" role="alert" hidden></div>
+  <section class="hero" id="hero"><div class="orbit"><img src="icons/logo.svg" width="72" height="80" alt="VEIL kalkanı"></div>
+    <div class="status-chip" id="statusChip" role="status">Hazırlanıyor</div>
+    <h1 id="headline">Kontrol sende.</h1><p id="description">Bağlantı ve reklam korumanı tek yerden yönet.</p>
+    <p class="countdown" id="countdown" hidden></p>
+    <button id="torToggle" class="primary" disabled>Yükleniyor…</button>
+    <button id="retry" class="secondary" hidden>Şimdi yeniden dene</button>
+  </section>
+  <div class="meta"><span id="connectionType">YEREL TOR</span><span id="verification">Henüz doğrulanmadı</span></div>
+  <div id="warning" class="notice warning" hidden></div><div id="error" class="notice error" role="alert" hidden></div>
+  <section id="donationCard" class="donation-card" hidden><strong>Bir kahve molası? ☕</strong><p>Bu projeyi tek başıma geliştiriyorum. Desteğin devam etmemi sağlar.</p><div><button id="later" class="text-button">Daha sonra</button><button id="never" class="text-button">Bir daha gösterme</button></div></section>
+  <footer><button id="support" class="support">Bana destek ol ☕ <span>↗</span></button><div class="fineprint">Açık kaynak · Telemetri yok · v1.0.2</div></footer>
+</main><script src="core.js"></script><script src="popup.js"></script></body></html>

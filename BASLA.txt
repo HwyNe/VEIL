@@ -1,0 +1,25 @@
+VEIL — Hızlı başlangıç
+
+1. Önce VEIL_Onizleme.html dosyasını açıp arayüzü inceleyebilirsin.
+   Bu demo bağlantı kurmaz; gerçek eklenti aşağıdaki adımlarla yüklenir.
+
+2. Chrome: chrome://extensions → Geliştirici modu → Paketlenmemiş öğe yükle
+   Seçilecek klasör: dist/chrome
+
+3. CachyOS / Arch / Ubuntu / Fedora: Bu paketin klasöründe terminal aç:
+   bash native/install-linux.sh
+   Betiği sudo ile başlatma. Gerekirse paket kurulumu kendi sudo iznini ister.
+
+4. Tarayıcıyı yeniden aç. VEIL → Ayarlar → Kurulumu kontrol et.
+   Ardından VEIL panelinden Tor modunu aç.
+
+5. Tor koparsa NORMAL bağlantıya dönülür, reklam kalkanı duraklar.
+   24 dakika sonra yeniden denenir. İstediğinde hemen yeniden deneyebilirsin.
+
+6. Diğer tarayıcılar/platformlar ve ayrıntılar: README_TR.md
+   Canlı test adımları ve bilinen sınırlar: docs/TEST_DURUMU.md
+
+Bu ortamda gerçek tarayıcı/Tor ağı testi yapılmadı. Paket mağazada yayımlanmış
+veya imzalanmış değildir. Tam YouTube reklam engellemesi vaat edilmez.
+Tor programı native kurucuyla ayrıca kurulur; saf bir eklentinin içinde
+çalıştırılabilen bir program değildir.

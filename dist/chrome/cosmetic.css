@@ -1,0 +1,10 @@
+/* Dar seçiciler: sayfa başına JS gözlemcisi veya sürekli tarama yok. */
+ins.adsbygoogle,
+iframe[src*="doubleclick.net"],
+iframe[src*="googlesyndication.com"],
+ytd-ad-slot-renderer,
+ytd-display-ad-renderer,
+ytd-promoted-sparkles-web-renderer,
+ytd-promoted-video-renderer,
+ytd-in-feed-ad-layout-renderer,
+#player-ads { display: none !important; }
