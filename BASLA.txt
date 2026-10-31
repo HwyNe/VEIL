@@ -20,6 +20,7 @@ VEIL — Hızlı başlangıç
    Canlı test adımları ve bilinen sınırlar: docs/TEST_DURUMU.md
 
 Bu ortamda gerçek tarayıcı/Tor ağı testi yapılmadı. Paket mağazada yayımlanmış
-veya imzalanmış değildir. Tam YouTube reklam engellemesi vaat edilmez.
+veya imzalanmış değildir. YouTube reklam engellemesi 1.1.0 ile güçlendirildi ama tam engelleme vaat edilmez.
+Çıkış ülkesi: VEIL → Ayarlar → Tor çıkış ülkesi (Tor kapalıyken değiştir).
 Tor programı native kurucuyla ayrıca kurulur; saf bir eklentinin içinde
 çalıştırılabilen bir program değildir.

@@ -41,9 +41,9 @@ async function filters(s) {
   await readFilters(s);
   if (s.adblockActive !== active) throw new Error('Reklam kuralı değişikliği tarayıcı tarafından doğrulanmadı.');
 }
-async function native(command) {
+async function native(command, extra = {}) {
   let result;
-  try { result = await api.runtime.sendNativeMessage(NATIVE, { command }); }
+  try { result = await api.runtime.sendNativeMessage(NATIVE, { command, ...extra }); }
   catch (e) {
     const error = new Error(`Tor yardımcısına ulaşılamadı. Kurulum sayfasını aç. (${e.message})`);
     error.code = 'NATIVE_TRANSPORT'; throw error;
@@ -123,14 +123,14 @@ async function check(s, { start = false } = {}) {
     if (s.status === 'connected' && !await ownsProxy(s)) throw new Error('Proxy ayarı başka bir işlem tarafından değiştirildi.');
     if (s.mode === 'managed') {
       let n;
-      try { n = await native(start ? 'start' : 'status'); }
+      try { n = await (start ? native('start', { exitCountry: s.exitCountry || '' }) : native('status')); }
       catch (e) {
         s.nativeAvailable = e.code !== 'NATIVE_TRANSPORT';
         throw e;
       }
       s.nativeAvailable = true;
       s.bootstrap = n.bootstrap || 0;
-      if (!n.running && !start) n = await native('start');
+      if (!n.running && !start) n = await native('start', { exitCountry: s.exitCountry || '' });
       if (!n.socksReady || n.bootstrap < 100) {
         // İlk bootstrap hata sayılmaz; Tor'u bitmeden durdurup döngüye girme.
         if (s.status === 'connecting' && Date.now() < s.connectDeadline) {
@@ -145,7 +145,11 @@ async function check(s, { start = false } = {}) {
       await applyProxy(s);
     }
     // Proxy ayarının bulunması yeterli değildir; Tor çıkışı ayrıca doğrulanır.
-    const response = await fetch(HEALTH, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(12000) });
+    let response;
+    try { response = await fetch(HEALTH, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(12000) }); }
+    catch (e) {
+      throw new Error(s.exitCountry ? `Tor doğrulanamadı. Seçili çıkış ülkesinde (${s.exitCountry.toUpperCase()}) kullanılabilir çıkış olmayabilir; ayarlardan “Otomatik”i dene.` : e.message);
+    }
     if (!response.ok) throw new Error('Tor doğrulama servisine ulaşılamadı.');
     const info = await response.json();
     if (info.IsTor !== true) throw new Error('Bağlantı Tor çıkışı olarak doğrulanmadı.');
@@ -226,7 +230,9 @@ async function command(m) {
       const nextMode = m.mode === 'external' ? 'external' : 'managed';
       const nextPort = nextMode === 'managed' ? 19050 : C.port(m.port);
       if (s.torEnabled && (nextMode !== s.mode || nextPort !== s.port)) throw new Error('Bağlantı türünü değiştirmeden önce Tor modunu kapat.');
-      s.mode = nextMode; s.port = nextPort; s.supportUrl = C.supportUrl(m.supportUrl);
+      const nextCountry = nextMode === 'managed' ? C.exitCountry(m.exitCountry) : '';
+      if (s.torEnabled && nextCountry !== (s.exitCountry || '')) throw new Error('Çıkış ülkesini değiştirmeden önce Tor modunu kapat.');
+      s.mode = nextMode; s.port = nextPort; s.exitCountry = nextCountry; s.supportUrl = C.supportUrl(m.supportUrl);
       s.reminderEnabled = Boolean(m.reminderEnabled);
       s.nextDonationAt = Date.now() + C.DONATION_MS;
       if (!s.reminderEnabled) s.donationPending = false;

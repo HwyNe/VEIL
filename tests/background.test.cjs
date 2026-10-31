@@ -203,3 +203,35 @@ test('yabancı web sayfasından kontrol mesajı kabul edilmez',async()=>{
   const handled=h.api.runtime.onMessage.handlers[0]({type:'TOR',enabled:true},{id:ID,url:'https://example.com/'},()=>{called=true;});
   assert.equal(handled,false); assert.equal(called,false); assert.equal(h.stored.torEnabled,false);
 });
+test('çıkış ülkesi doğrulanır ve start komutuyla native yardımcıya iletilir',async()=>{
+  assert.equal(C.exitCountry(''),''); assert.equal(C.exitCountry(' TR '),'tr');
+  for(const bad of ['xx','turkey','tr;rm','{tr}']) assert.throws(()=>C.exitCountry(bad));
+  const h=await setup({saved:{...C.defaults(),exitCountry:'tr'}}); const sent=[];
+  const original=h.api.runtime.sendNativeMessage;
+  h.api.runtime.sendNativeMessage=async(id,m)=>{sent.push(m);return original(id,m);};
+  const r=await h.send({type:'TOR',enabled:true}); assert.equal(r.state.status,'connected');
+  assert.equal(JSON.stringify(sent.find(m=>m.command==='start')),JSON.stringify({command:'start',exitCountry:'tr'}));
+});
+test('ülke seçilmemişse start boş exitCountry ile gider (otomatik)',async()=>{
+  const h=await setup(); const sent=[]; const original=h.api.runtime.sendNativeMessage;
+  h.api.runtime.sendNativeMessage=async(id,m)=>{sent.push(m);return original(id,m);};
+  await h.send({type:'TOR',enabled:true}); assert.equal(sent.find(m=>m.command==='start').exitCountry,'');
+});
+test('çıkış ülkesi ayarı kaydedilir; Tor açıkken değiştirilemez; harici modda sıfırlanır',async()=>{
+  const h=await setup();
+  let r=await h.send({type:'SETTINGS',mode:'managed',port:19050,exitCountry:'de',supportUrl:'',reminderEnabled:false});
+  assert.equal(r.ok,true); assert.equal(h.stored.exitCountry,'de');
+  r=await h.send({type:'SETTINGS',mode:'managed',port:19050,exitCountry:'zz',supportUrl:'',reminderEnabled:false});
+  assert.equal(r.ok,false); assert.equal(h.stored.exitCountry,'de');
+  await h.send({type:'TOR',enabled:true});
+  r=await h.send({type:'SETTINGS',mode:'managed',port:19050,exitCountry:'tr',supportUrl:'',reminderEnabled:false});
+  assert.equal(r.ok,false); assert.match(r.error,/Tor modunu kapat/); assert.equal(h.stored.exitCountry,'de');
+  await h.send({type:'TOR',enabled:false});
+  r=await h.send({type:'SETTINGS',mode:'external',port:9050,exitCountry:'tr',supportUrl:'',reminderEnabled:false});
+  assert.equal(r.ok,true); assert.equal(h.stored.exitCountry,'');
+});
+test('seçili ülkede doğrulama başarısızsa hata ülkeyi ve Otomatik önerisini söyler',async()=>{
+  const h=await setup({saved:{...C.defaults(),exitCountry:'tr'},fetchResult:new Error('timeout')});
+  const r=await h.send({type:'TOR',enabled:true});
+  assert.equal(r.state.status,'fallback'); assert.match(r.state.lastError,/TR/); assert.match(r.state.lastError,/Otomatik/);
+});

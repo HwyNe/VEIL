@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VEIL · Tor & Reklam Kalkanı",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Yerel Tor yönetimi, temel reklam engelleme ve bağlantı durumunu açıkça gösteren hafif tarayıcı aracı.",
   "minimum_chrome_version": "120",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvqL+72kJez5ZJxKrl/j3dSmbLivzd4ugJQHUD8uejua9CTr8RZCDZYPsn9CzeQDg+eavyfkY7KUKg+CqXhPiNbG31pe0RK0eJG352WkSFpRFzzSokCswKPNusxaxpotshJiTye472OfFLM+11RaGcQtSgdIQifrpT9kImehGumhnfCctR9VtgBRRxKlZjI2aHSyfNy6BvfxRl7kWk8VGWSBWNJh+5ftdHj9KkYELMv0Shrp6+xBaKT+CELAO+joefsFJd5p8ve3qYmWtTRyB7DTOeQFBTmcjewiV2YAVsts31jSGzCtg5huKlxIJWzVawV1FkQYY3L6Yv3l6T0mfgQIDAQAB",
@@ -57,6 +57,27 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.youtube.com/*"
+      ],
+      "js": [
+        "youtube-main.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://*.youtube.com/*"
+      ],
+      "js": [
+        "youtube.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "content_security_policy": {

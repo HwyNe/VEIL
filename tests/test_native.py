@@ -65,5 +65,39 @@ class NativeTests(unittest.TestCase):
         existing={'ok':True,'running':True,'bootstrap':100,'socksReady':True}
         with patch.object(host,'status',return_value=existing),patch.object(host.subprocess,'Popen') as popen:
             self.assertEqual(host.start(),existing);popen.assert_not_called()
+    def test_exit_country_validation(self):
+        self.assertTrue(self.call({'command':'status'})['ok'])
+        for body in [{'command':'start','exitCountry':'xx'},{'command':'start','exitCountry':'tr;ls'},{'command':'start','exitCountry':['tr']},
+                     {'command':'status','exitCountry':'tr'},{'command':'stop','exitCountry':'tr'},{'command':'start','exitCountry':'tr','args':'x'}]:
+            self.assertFalse(self.call(body)['ok'],body)
+    def test_exit_country_written_to_torrc_and_recorded(self):
+        with tempfile.TemporaryDirectory(prefix='veil tor ') as directory:
+            data=Path(directory)
+            fake=data/'fake_tor'
+            fake.write_text('#!'+sys.executable+'\nimport sys\nprint(\"[err] Unable to load GeoIP file\", flush=True)\nsys.exit(1)\n')
+            fake.chmod(0o700)
+            with patch.object(host,'DATA',data),patch.object(host,'binary',return_value=str(fake)),patch.object(host,'status',return_value={'running':False}),patch.object(host,'available',return_value=True):
+                with self.assertRaisesRegex(RuntimeError,'GeoIP'):
+                    host.start('tr')
+            config=(data/'torrc').read_text()
+            self.assertIn('ExitNodes {tr}',config); self.assertIn('StrictNodes 1',config)
+            self.assertEqual(host.recorded_exit() if False else (data/'exit_country').read_text(),'tr')
+            with patch.object(host,'DATA',data),patch.object(host,'binary',return_value=str(fake)),patch.object(host,'status',return_value={'running':False}),patch.object(host,'available',return_value=True):
+                with self.assertRaises(RuntimeError): host.start('')
+            config=(data/'torrc').read_text()
+            self.assertNotIn('ExitNodes',config); self.assertNotIn('StrictNodes',config)
+    def test_unsupported_country_never_reaches_torrc(self):
+        with patch.object(host.subprocess,'Popen') as popen:
+            with self.assertRaisesRegex(ValueError,'çıkış ülkesi'): host.start('xx')
+            popen.assert_not_called()
+    def test_running_tor_with_other_country_is_restarted_not_reused(self):
+        running={'ok':True,'running':True,'bootstrap':100,'socksReady':True}
+        with tempfile.TemporaryDirectory() as directory:
+            data=Path(directory); (data/'exit_country').write_text('de')
+            with patch.object(host,'DATA',data),patch.object(host,'status',return_value=running),patch.object(host,'binary',return_value=None),patch.object(host,'shutdown_owned') as down:
+                with self.assertRaisesRegex(RuntimeError,'Tor bulunamadı'): host.start('tr')
+                down.assert_called_once()
+            with patch.object(host,'DATA',data),patch.object(host,'status',return_value=running),patch.object(host,'shutdown_owned') as down:
+                self.assertEqual(host.start('de'),running); down.assert_not_called()
 
 if __name__=='__main__': unittest.main()

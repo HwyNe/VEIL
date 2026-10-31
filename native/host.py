@@ -19,6 +19,8 @@ INSTALL = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False)
 DATA = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local' / 'share'))) / 'veil' / 'tor'
 COOKIE = DATA / 'control_auth_cookie'
 MAX_MESSAGE = 16384
+# Eklentideki VeilCore.COUNTRIES ile aynı olmalı; torrc'ye yalnızca bu iki harfli kodlar yazılır.
+EXIT_COUNTRIES = {'tr', 'de', 'nl', 'fr', 'gb', 'se', 'ch', 'at', 'fi', 'no', 'ro', 'us'}
 
 def binary():
     # Kurulumla kaydedilmiş dosya yolu veya PATH; eklenti bir dosya yolu gönderemez.
@@ -109,10 +111,30 @@ def available(port):
         except OSError:
             return False
 
-def start():
+def recorded_exit():
+    try:
+        return (DATA / 'exit_country').read_text(encoding='ascii').strip()
+    except OSError:
+        return ''
+
+def shutdown_owned():
+    # Yalnızca cookie ile doğrulanan, VEIL'in kendi Tor süreci kapatılır.
+    control('SIGNAL SHUTDOWN')
+    for _ in range(50):
+        if available(SOCKS_PORT) and available(CONTROL_PORT):
+            return
+        time.sleep(0.2)
+    raise RuntimeError('Çıkış ülkesi değiştirilirken Tor zamanında kapanmadı.')
+
+def start(exit_country=''):
+    if exit_country and exit_country not in EXIT_COUNTRIES:
+        raise ValueError('Desteklenmeyen çıkış ülkesi.')
     current = status()
     if current['running']:
-        return current
+        if recorded_exit() == exit_country:
+            return current
+        # Çalışan Tor başka çıkış ülkesiyle başlatılmış; yeni ayarla yeniden başlat.
+        shutdown_owned()
     tor = binary()
     if not tor:
         raise RuntimeError('Tor bulunamadı. native/install-linux.sh veya README kurulum adımlarını kullan.')
@@ -128,9 +150,11 @@ def start():
         'CookieAuthentication 1',
         'CookieAuthFile ' + quoted(COOKIE),
         'ClientOnly 1', 'AvoidDiskWrites 1', 'SafeLogging 1',
+        *([f'ExitNodes {{{exit_country}}}', 'StrictNodes 1'] if exit_country else []),
         # Log'un dosya yolu ayrıştırıcısına bağımlı olma; çıktıyı Python dosyaya yönlendirir.
         'Log notice stdout', ''
     ]), encoding='utf-8')
+    (DATA / 'exit_country').write_text(exit_country, encoding='ascii')
     options = {'stdin': subprocess.DEVNULL, 'stderr': subprocess.STDOUT,
                'cwd': str(DATA), 'close_fds': True}
     if os.name == 'nt':
@@ -150,7 +174,9 @@ def start():
                 lines = log.read().decode('utf-8', errors='replace').splitlines()
             warnings = [line for line in lines if '[warn]' in line or '[err]' in line]
             detail = ' | '.join((warnings or lines)[-3:])[-500:]
-            raise RuntimeError(f'Tor başlatılamadı (çıkış {process.returncode}). {detail or "tor.log boş."}')
+            hint = ' Çıkış ülkesi için GeoIP dosyası (tor-geoipdb) eksik olabilir; ayarlardan “Otomatik”i seç.' \
+                if exit_country and any('geoip' in line.lower() for line in lines) else ''
+            raise RuntimeError(f'Tor başlatılamadı (çıkış {process.returncode}). {detail or "tor.log boş."}{hint}')
         result = status()
         if result['running']:
             return result
@@ -164,13 +190,20 @@ def stop():
     return {'ok': True, 'stopping': True}
 
 def dispatch(message):
-    if not isinstance(message, dict) or set(message) != {'command'}:
-        raise ValueError('Yalnızca command alanı kabul edilir.')
+    # Yalnızca command; start komutunda ek olarak izin listesindeki exitCountry kabul edilir.
+    if not isinstance(message, dict) or 'command' not in message or not set(message) <= {'command', 'exitCountry'}:
+        raise ValueError('Yalnızca command ve (start için) exitCountry alanı kabul edilir.')
     actions = {'start': start, 'status': status, 'stop': stop}
-    if message['command'] not in actions:
+    command = message['command']
+    if command not in actions:
         raise ValueError('Komut start, status veya stop olmalı.')
+    country = message.get('exitCountry', '')
+    if 'exitCountry' in message and command != 'start':
+        raise ValueError('exitCountry yalnızca start komutuyla kullanılabilir.')
+    if not isinstance(country, str) or (country and country not in EXIT_COUNTRIES):
+        raise ValueError('Desteklenmeyen çıkış ülkesi.')
     with lock():
-        return actions[message['command']]()
+        return start(country) if command == 'start' else actions[command]()
 
 def read_exact(stream, size):
     data = bytearray()

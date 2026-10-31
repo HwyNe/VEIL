@@ -41,3 +41,15 @@ Kullanıcının Tor 0.4.9.14 başlangıç çıktısında, `Log notice file` yolu
 ## 1.0.2: reklam kapatma tanısı
 
 Kullanıcı aynı reklam kaynağının VEIL kurulu olduğunda ERR_BLOCKED_BY_CLIENT ile engellendiğini, VEIL kaldırıldığında opaque fetch yanıtı verdiğini bildirdi. Bu, örnek isteği VEIL’in engellediğini gösterir. Eski reklam kapatma düğmesinin neden beklenen etkiyi vermediği bu ortamda gerçek tarayıcıyla tekrarlanamadı. Yeni sürüm getEnabledRulesets ile etkin kuralları doğrular, API uygulamaz/reddederse arayüzde aktif durumu ve hatayı korur. Kontrol ekranın üstündedir. Tanı düğmesi varsayımsal DNR eşleşmesini gösterir; gerçek ağ testi yerine geçmez. Toplam 42 otomatik test geçmiştir. Yeni sürümün kullanıcı cihazındaki açık/kapalı karşılaştırması hâlâ yapılmalıdır.
+
+## 1.1.0: YouTube reklamları ve çıkış ülkesi
+
+Otomatik testler (hepsi mock): 44 Node + 15 Python = 59 test geçti. Yeni testler: oynatıcı yanıtından reklam alanı silme (`JSON.parse`, `ytInitialPlayerResponse`, `Response.json`), kapalıyken dokunmama, reklam başlayınca skip düğmesi/sona sarma/sesi geri getirme, manifest kaydı (`MAIN`, `document_start`), YouTube yol kuralları, çıkış ülkesi doğrulaması ve native `exitCountry` alanının izin listesi, torrc çıktısı ve ülke değişince yeniden başlatma.
+
+**Doğrulanmayanlar:** Gerçek YouTube yanıtları, gerçek oynatıcı DOM'u, YouTube'un sunucu tarafı reklam gömmesi ve “reklam engelleyici” uyarıları, gerçek Chrome/Firefox yüklemesi, canlı Tor ile `ExitNodes {tr}` (Türkiye'de az çıkış olabilir), GeoIP dosyası olmayan Tor kurulumları.
+
+Kabul kontrolü:
+1. Eklentiyi yeniden yükle, YouTube sekmesini yenile. Reklamı olan bir videoyu aç; reklam hiç görünmemeli veya bir saniye içinde geçilmeli, video sesi sonra normale dönmeli.
+2. Geliştirici konsolunda sayfa `<html data-veil-yt="on">` olmalı; kalkan kapalıyken `off`.
+3. Ayarlar → Tor çıkış ülkesi → Türkiye, Tor'u kapat/aç. TOR DOĞRULANDI görünmeli; görünmezse VEIL normal bağlantıya döner, “Otomatik”i seç.
+4. YouTube “reklam engelleyici” uyarısı gösterirse bu sürüm onu aşmaya çalışmaz; Reklam kalkanını kapatabilirsin.

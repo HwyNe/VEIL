@@ -30,6 +30,15 @@ DOMAINS = [
  'ads.youtube.com', 'imasdk.googleapis.com'
 ]
 
+# YouTube'un kendi alan adı engellenemez; yalnızca reklama özgü yollar engellenir.
+PATHS = [
+    '||youtube.com/pagead/', '||youtube.com/api/stats/ads', '||youtube.com/ptracking',
+    '||youtube.com/get_midroll_', '||youtube.com/youtubei/v1/player/ad_break'
+]
+VERSION = '1.1.0'
+TYPES = ['sub_frame', 'stylesheet', 'script', 'image', 'font', 'object',
+         'xmlhttprequest', 'ping', 'csp_report', 'media', 'websocket', 'other']
+
 def dump(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
@@ -37,10 +46,9 @@ def build():
     key = (ROOT / 'scripts/public-key.txt').read_text().strip()
     identifier = ''.join(chr(97 + int(c, 16)) for c in hashlib.sha256(base64.b64decode(key)).hexdigest()[:32])
     (ROOT / 'CHROME_ID.txt').write_text(identifier + '\n')
-    rules = [{'id': i, 'priority': 1, 'action': {'type': 'block'}, 'condition': {
-        'urlFilter': '||' + domain + '^', 'resourceTypes': ['sub_frame', 'stylesheet', 'script', 'image', 'font',
-        'object', 'xmlhttprequest', 'ping', 'csp_report', 'media', 'websocket', 'other']
-    }} for i, domain in enumerate(sorted(set(DOMAINS)), 1)]
+    filters = ['||' + domain + '^' for domain in sorted(set(DOMAINS))] + PATHS
+    rules = [{'id': i, 'priority': 1, 'action': {'type': 'block'},
+              'condition': {'urlFilter': f, 'resourceTypes': TYPES}} for i, f in enumerate(filters, 1)]
     dump(SOURCE / 'rules.json', rules)
     css = (SOURCE / 'cosmetic.css').read_text()
     # CSS tercih değişince mevcut sayfada da kaldırılır; video oynatıcısına müdahale yok.
@@ -62,7 +70,7 @@ def build():
 })();
 '''.replace('CSS;', json.dumps(css) + ';'), encoding='utf-8')
     manifest = {
-      'manifest_version': 3, 'name': 'VEIL · Tor & Reklam Kalkanı', 'version': '1.0.2',
+      'manifest_version': 3, 'name': 'VEIL · Tor & Reklam Kalkanı', 'version': VERSION,
       'description': 'Yerel Tor yönetimi, temel reklam engelleme ve bağlantı durumunu açıkça gösteren hafif tarayıcı aracı.',
       'minimum_chrome_version': '120', 'key': key,
       'permissions': ['proxy', 'privacy', 'declarativeNetRequest', 'storage', 'alarms', 'notifications', 'nativeMessaging'],
@@ -72,7 +80,12 @@ def build():
       'icons': {str(n): f'icons/icon{n}.png' for n in [16,32,48,128]},
       'options_ui': {'page': 'setup.html', 'open_in_tab': True},
       'declarative_net_request': {'rule_resources': [{'id': 'ads', 'enabled': True, 'path': 'rules.json'}]},
-      'content_scripts': [{'matches':['http://*/*', 'https://*/*'], 'js':['content.js'], 'run_at':'document_idle'}],
+      'content_scripts': [
+        {'matches':['http://*/*', 'https://*/*'], 'js':['content.js'], 'run_at':'document_idle'},
+        # YouTube: reklam verisini oynatıcı yanıtından ayıklar (sayfa dünyası) ve atlama yedeği sağlar.
+        {'matches':['https://*.youtube.com/*'], 'js':['youtube-main.js'], 'run_at':'document_start', 'all_frames': True, 'world': 'MAIN'},
+        {'matches':['https://*.youtube.com/*'], 'js':['youtube.js'], 'run_at':'document_start', 'all_frames': True}
+      ],
       'content_security_policy': {'extension_pages': "script-src 'self'; object-src 'none'; base-uri 'none'"}
     }
     dump(SOURCE / 'manifest.json', manifest)

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VEIL · Tor & Reklam Kalkanı",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Yerel Tor yönetimi, temel reklam engelleme ve bağlantı durumunu açıkça gösteren hafif tarayıcı aracı.",
   "permissions": [
     "proxy",
@@ -58,6 +58,27 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.youtube.com/*"
+      ],
+      "js": [
+        "youtube-main.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://*.youtube.com/*"
+      ],
+      "js": [
+        "youtube.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "content_security_policy": {

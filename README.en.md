@@ -6,14 +6,16 @@ Repository: [hwyne/VEIL](https://github.com/hwyne/VEIL).
 
 [Türkçe README](README.md) · [Detailed Turkish guide](README_TR.md) · [Test status](docs/TEST_DURUMU.md) · [MIT license](LICENSE)
 
-**Experimental preview:** not published in a browser store. Forty-two automated tests passed, but browser APIs and DOM behavior are mocked. Real Chrome/Firefox loading, live Tor connectivity, YouTube behavior and platform installers still need acceptance testing in the development environment.
+**Experimental preview:** not published in a browser store. Fifty-nine automated tests passed, but browser APIs and DOM behavior are mocked. Real Chrome/Firefox loading, live Tor connectivity, YouTube behavior and platform installers still need acceptance testing in the development environment.
 
 ## Features
 
 - Manage a local Tor process using a small native messaging helper.
 - Route the browser's proxy-supported web requests through local SOCKS5.
 - Verify the Tor exit using `check.torproject.org` before showing a connected state.
-- Apply 81 basic ad/tracker domain rules and limited cosmetic filtering.
+- Apply 86 network rules (81 ad/tracker domains + 5 YouTube ad paths) and limited cosmetic filtering.
+- YouTube: strip ad data from player responses and skip ads that still start (YouTube-only scripts; no video seeking on other sites). YouTube changes its delivery often, so full blocking is not guaranteed.
+- Optional Tor exit country (Settings). YouTube picks ads by exit country; choosing one such as Türkiye gives local ads at the cost of speed and anonymity.
 - Fall back to the previous normal/system proxy configuration when Tor fails, pause ad blocking and notify the user. The normal IP becomes visible to websites.
 - Retry Tor after 24 minutes; restore the previous ad-blocking preference after successful verification.
 - Provide an optional support link and dismissible three-day reminder. No payment account is preconfigured.

@@ -13,14 +13,14 @@
 ## Neler yapar?
 
 - **Yerel Tor:** Tarayıcının proxy destekleyen web isteklerini yerel SOCKS5 üzerinden yönlendirir. Yardımcı kurulduktan sonra Tor'u eklentiden başlatıp durdurabilirsin.
-- **Reklam kalkanı:** 81 temel reklam/takip alan adı kuralı ve sınırlı görsel gizleme. Kurallar, arka plan kodu uyurken de çalışır.
+- **Reklam kalkanı:** 86 ağ kuralı (81 alan adı + 5 YouTube reklam yolu), sınırlı görsel gizleme ve YouTube için ayrı reklam ayıklama/atlama betiği. Kurallar, arka plan kodu uyurken de çalışır.
 - **Açık durum bilgisi:** Tor bağlantısını `check.torproject.org` üzerinden doğrular; doğrulanmamış bağlantıyı aktif olarak göstermez.
 - **Kesintide normal bağlantı:** Tor koparsa normal taramaya döner ve reklam kalkanını geçici duraklatır. Kullanıcıya bildirim gösterir; 24 dakika sonra yeniden dener. Bu sırada normal IP adresi kullanılır.
 - **Bağımsız tercihler:** Tor ve AdBlock ayrı yönetilir. Tor yeniden doğrulanınca önceki reklam kalkanı tercihi geri gelir.
 - **İsteğe bağlı destek:** Kalıcı destek düğmesi ve kapatılabilir üç günlük hatırlatma. Bağış hesabı bağlantısı girilmeden hatırlatma oluşturulmaz.
 - **Yerel arayüz:** Uzak font, uzak JavaScript, analiz/telemetri servisi veya arayüz framework'ü yok.
 
-**Kapsam:** Yalnızca eklentinin kurulu olduğu tarayıcının ayarları değiştirilir. Bütün bilgisayar için VPN kurulmaz. Tor Browser'ın anonimlik korumaları sağlanmaz; YouTube reklamlarının tamamının engellenmesi vaat edilmez.
+**Kapsam:** Yalnızca eklentinin kurulu olduğu tarayıcının ayarları değiştirilir. Bütün bilgisayar için VPN kurulmaz. Tor Browser'ın anonimlik korumaları sağlanmaz; YouTube reklamlarının tamamının engellenmesi vaat edilmez; YouTube yöntemlerini sık değiştirir.
 
 ## Kurulum
 
@@ -83,7 +83,11 @@ Kurulum betiğini çalıştır, tarayıcıyı yeniden aç ve Ayarlar → Kurulum
 
 **YouTube reklamları hâlâ görünüyor.**
 
-Bu sürüm temel alan adı filtreleri içerir; video akışındaki bütün reklamları engellemez. Normal video dosyaları genel olarak engellenmez.
+1.1.0 ile YouTube için reklam verisini oynatıcı yanıtından ayıklayan ve atlanamayan reklamı geçen ayrı bir betik eklendi. Sorun sürerse sayfayı yenile, VEIL'i eklentiler sayfasından yeniden yükle ve Reklam kalkanının açık olduğunu kontrol et. Tor yeniden denemesi sırasında kalkan bilerek duraklar. Normal video dosyaları genel olarak engellenmez.
+
+**YouTube reklamları yabancı ülkeden/dilinde geliyor.**
+
+YouTube reklamı Tor çıkışının ülkesine göre seçer. Ayarlar → “Tor çıkış ülkesi” ile Türkiye gibi bir ülke seçebilirsin (Tor kapalıyken değiştir). Bu, seçenekleri azalttığı için bağlantıyı yavaşlatabilir ve gizliliği düşürür; çıkış bulunamazsa VEIL normal bağlantıya döner. Reklam engelleme çalışıyorsa çıkış ülkesi çoğu zaman önemsizdir.
 
 **Tor kapalıyken AdBlock çalışır mı?**
 
